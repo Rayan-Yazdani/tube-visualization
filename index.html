@@ -168,11 +168,11 @@
 
                     if (predictionData[key]) {
                         Springback = predictionData[key].springback;
-                        document.getElementById("springback-text").textContent = `Springback: ${Springback.toFixed(2)}`;
+                        document.getElementById("springback-text").textContent = `Rückfederung: ${Springback.toFixed(2)}`;
                         updateLines();
                         updateBendCircles();
                     } else {
-                        document.getElementById("springback-text").textContent = "❌ No prediction found for selected inputs";
+                        document.getElementById("springback-text").textContent = "❌ Keine Vorhersage für die gewählten Eingaben gefunden";
                         console.warn("❌ No data for key:", key);
                     }
                 }, 300); // ✅ Wait 300ms before making the request
