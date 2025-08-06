@@ -1,0 +1,465 @@
+/* Controls container */
+#controls {
+    position: absolute;
+    top: 80px; /* Adjust as needed */
+    left: 10px; /* Adjust as needed */
+    color: rgb(255, 255, 255); /* Red font for "Grid:" */
+    font-family: Arial, sans-serif; /* Arial font */
+    display: flex;
+    align-items: center; /* Align "Grid:" and buttons horizontally */
+    gap: 5px; /* Space between "Grid:" and buttons */
+}
+
+/* Buttons container */
+#grid-buttons {
+    display: flex;
+    align-items: center; /* Align toggle and stacked buttons horizontally */
+    gap: 2px; /* Space between toggle and stacked buttons */
+}
+
+/* Rectangular Grid button */
+#toggleGrid {
+    width: 80px; /* Width of the rectangle */
+    height: 40px; /* Height of the rectangle */
+    border: 2px solid rgb(255, 255, 255); /* Border Color */
+    border-radius: 5px; /* Slightly rounded corners */
+    background: transparent; /* Transparent background */
+    color: rgb(255, 255, 255); /* Red text */
+    font-size: 12px; /* Font size for "Toggle" text */
+    cursor: pointer; /* Pointer cursor on hover */
+    text-align: center; /* Center text inside the button */
+}
+
+/* Stacked circular buttons */
+#stacked-buttons {
+    display: flex;
+    flex-direction: column; /* Stack buttons vertically */
+    justify-content: space-between; /* Distribute buttons evenly */
+    height: 40px; /* Matches the height of #toggleGrid */
+}
+
+#increaseGrid,
+#decreaseGrid {
+    width: 20px; /* Circular button width */
+    height: 20px; /* Circular button height */
+    border-radius: 50%; /* Circular shape */
+    border: 2px solid rgb(255, 255, 255); /* Red border */
+    background: transparent; /* Transparent background */
+    color: rgb(255, 255, 255); /* Red text */
+    font-size: 10px; /* Font size for symbols */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+/* Adjust circular buttons' height to match toggle width */
+#stacked-buttons {
+    height: 40px; /* Matches the width of #toggleGrid */
+}
+
+#increaseGrid,
+#decreaseGrid {
+    flex: 1; /* Evenly split height of #stacked-buttons */
+}
+
+/* Lines toggle section */
+#line-toggle {
+    margin-top: 1px; /* Add spacing below grid buttons */
+    margin-left: 10px;
+    text-align: center; /* Center-align the button */
+}
+
+/* Lines toggle button */
+#toggleLines {
+    width: 80px; /* Match the width of the Toggle button */
+    height: 40px; /* Height consistent with the Grid Toggle button */
+    border: 2px solid rgb(255, 255, 255); /* White border */
+    border-radius: 5px; /* Slightly rounded corners */
+    background: transparent; /* Transparent background */
+    color: rgb(255, 255, 255); /* White text */
+    font-size: 12px; /* Font size for "Show/Hide Lines" text */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+/* Circle toggle section */
+#circle-toggle {
+    margin-top: 1px; /* Add spacing below line toggle */
+    margin-left: 10px;
+    text-align: center; /* Center-align the button */
+}
+
+/* Circle toggle button */
+#toggleCircle {
+    width: 130px; /* Match the width of other buttons */
+    height: 40px; /* Height consistent with other buttons */
+    border: 2px solid rgb(255, 255, 255); /* White border */
+    border-radius: 5px; /* Slightly rounded corners */
+    background: transparent; /* Transparent background */
+    color: rgb(255, 255, 255); /* White text */
+    font-size: 12px; /* Font size for "Show/Hide Circle" text */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+/* Coordinate toggle section */
+#coordinate-toggle {
+    margin-top: 1px; /* Add spacing below other controls */
+    display: flex;
+    flex-direction: row; /* Arrange buttons side by side */
+    gap: 10px; /* Space between buttons */
+    margin-left: 10px;
+    text-align: center; /* Center-align the buttons */
+}
+
+/* Coordinate toggle buttons */
+#toggleMainAxes,
+#toggleSecondaryAxes {
+    width: 110px; /* Button width */
+    height: 40px; /* Button height */
+    border: 2px solid rgb(255, 255, 255); /* White border */
+    border-radius: 5px; /* Slightly rounded corners */
+    background: transparent; /* Transparent background */
+    color: rgb(255, 255, 255); /* White text */
+    font-size: 12px; /* Font size for button text */
+    cursor: pointer; /* Pointer cursor on hover */
+}
+
+#tube-diameter {
+    width: 200px;
+    height: 35px;
+    position: absolute;
+    bottom: 20px; /* Adjust the distance from the bottom */
+    left: 20px; /* Adjust the distance from the left */
+    background: rgb(255, 255, 255); /* White background */
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column; /* Stack text and slider vertically */
+    align-items: left;
+    gap: 5px;
+}
+
+#tube-diameter-label {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: black;
+    font-weight: bold;
+}
+
+#tube-diameter-wrapper {
+    display: flex;
+    align-items: center; /* Align slider and number in a row */
+    gap: 10px; /* Space between slider and value */
+}
+
+#number-tube-diameter {
+    -webkit-appearance: none; /* Remove default styling (for Safari & Chrome) */
+    appearance: none;
+    width: 150px; /* Adjust slider width */
+    height: 4px; /* Slider track height */
+    background: #ee0606; /* Red track */
+    outline: none;
+    border-radius: 4px; /* Rounded corners */
+}
+
+/* Custom thumb (circle) */
+#number-tube-diameter::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px; /* Thumb width */
+    height: 15px; /* Thumb height */
+    background: black; /* Black thumb */
+    border-radius: 50%; /* Make it a circle */
+    cursor: pointer; /* Show pointer cursor */
+}
+
+#number-tube-diameter::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    background: black;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#tube-diameter-value {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: black;
+    font-weight: bold;
+    min-width: 40px; /* Ensure number stays aligned */
+    text-align: center;
+}
+
+#wall-thickness {
+    width: 200px;
+    height: 35px;
+    position: absolute;
+    bottom: 80px; /* Align with other sliders */
+    left: 20px; /* Positioned to the right of Tube Diameter */
+    background: rgb(255, 255, 255); /* White background */
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column; /* Stack text and slider vertically */
+    align-items: left;
+    gap: 5px;
+}
+
+#wall-thickness-label {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: black;
+    font-weight: bold;
+}
+
+#wall-thickness-wrapper {
+    display: flex;
+    align-items: center; /* Align slider and number in a row */
+    gap: 10px; /* Space between slider and value */
+}
+
+#number-wall-thickness {
+    -webkit-appearance: none; /* Remove default styling (for Safari & Chrome) */
+    appearance: none;
+    width: 150px; /* Adjust slider width */
+    height: 4px; /* Slider track height */
+    background: #ee0606; /* Red track */
+    outline: none;
+    border-radius: 4px; /* Rounded corners */
+}
+
+/* Custom thumb (circle) */
+#number-wall-thickness::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px; /* Thumb width */
+    height: 15px; /* Thumb height */
+    background: black; /* Black thumb */
+    border-radius: 50%; /* Make it a circle */
+    cursor: pointer; /* Show pointer cursor */
+}
+
+#number-wall-thickness::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    background: black;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#wall-thickness-value {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: black;
+    font-weight: bold;
+    min-width: 40px; /* Ensure number stays aligned */
+    text-align: center;
+}
+
+#mandrel-extraction {
+    width: 200px;
+    height: 35px;
+    position: absolute;
+    bottom: 140px; /* Positioned above Wall Thickness */
+    left: 20px; /* Keep aligned with other sliders */
+    background: rgb(255, 255, 255); /* White background */
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column; /* Stack text and slider vertically */
+    align-items: left;
+    gap: 5px;
+}
+
+#mandrel-extraction-label {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: black;
+    font-weight: bold;
+}
+
+#mandrel-extraction-wrapper {
+    display: flex;
+    align-items: center; /* Align slider and number in a row */
+    gap: 10px; /* Space between slider and value */
+}
+
+#number-mandrel-extraction {
+    -webkit-appearance: none; /* Remove default styling (for Safari & Chrome) */
+    appearance: none;
+    width: 150px; /* Adjust slider width */
+    height: 4px; /* Slider track height */
+    background: #ee0606; /* Red track */
+    outline: none;
+    border-radius: 4px; /* Rounded corners */
+}
+
+/* Custom thumb (circle) */
+#number-mandrel-extraction::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px; /* Thumb width */
+    height: 15px; /* Thumb height */
+    background: black; /* Black thumb */
+    border-radius: 50%; /* Make it a circle */
+    cursor: pointer; /* Show pointer cursor */
+}
+
+#number-mandrel-extraction::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    background: black;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#mandrel-extraction-value {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: black;
+    font-weight: bold;
+    min-width: 40px; /* Ensure number stays aligned */
+    text-align: center;
+}
+
+#collet-boost {
+    width: 200px;
+    height: 35px;
+    position: absolute;
+    bottom: 200px; /* Positioned above Mandrel Extraction */
+    left: 20px; /* Keep aligned with other sliders */
+    background: rgb(255, 255, 255); /* White background */
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column; /* Stack text and slider vertically */
+    align-items: left;
+    gap: 5px;
+}
+
+#collet-boost-label {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: black;
+    font-weight: bold;
+}
+
+#collet-boost-wrapper {
+    display: flex;
+    align-items: center; /* Align slider and number in a row */
+    gap: 10px; /* Space between slider and value */
+}
+
+#number-collet-boost {
+    -webkit-appearance: none; /* Remove default styling (for Safari & Chrome) */
+    appearance: none;
+    width: 150px; /* Adjust slider width */
+    height: 4px; /* Slider track height */
+    background: #ee0606; /* Red track */
+    outline: none;
+    border-radius: 4px; /* Rounded corners */
+}
+
+/* Custom thumb (circle) */
+#number-collet-boost::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px; /* Thumb width */
+    height: 15px; /* Thumb height */
+    background: black; /* Black thumb */
+    border-radius: 50%; /* Make it a circle */
+    cursor: pointer; /* Show pointer cursor */
+}
+
+#number-collet-boost::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    background: black;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#collet-boost-value {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: black;
+    font-weight: bold;
+    min-width: 40px; /* Ensure number stays aligned */
+    text-align: center;
+}
+
+#pressure-die-clearance {
+    width: 200px;
+    height: 35px;
+    position: absolute;
+    bottom: 260px; /* Positioned above Collet Boost */
+    left: 20px; /* Keep aligned with other sliders */
+    background: rgb(255, 255, 255); /* White background */
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column; /* Stack text and slider vertically */
+    align-items: left;
+    gap: 5px;
+}
+
+#pressure-die-clearance-label {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: black;
+    font-weight: bold;
+    }
+
+#pressure-die-clearance-wrapper {
+    display: flex;
+    align-items: center; /* Align slider and number in a row */
+    gap: 10px; /* Space between slider and value */
+}
+
+#number-pressure-die-clearance {
+    -webkit-appearance: none; /* Remove default styling (for Safari & Chrome) */
+    appearance: none;
+    width: 150px; /* Adjust slider width */
+    height: 4px; /* Slider track height */
+    background: #ee0606; /* Red track */
+    outline: none;
+    border-radius: 4px; /* Rounded corners */
+}
+
+/* Custom thumb (circle) */
+#number-pressure-die-clearance::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px; /* Thumb width */
+    height: 15px; /* Thumb height */
+    background: black; /* Black thumb */
+    border-radius: 50%; /* Make it a circle */
+    cursor: pointer; /* Show pointer cursor */
+}
+
+#number-pressure-die-clearance::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    background: black;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+#pressure-die-clearance-value {
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    color: black;
+    font-weight: bold;
+    min-width: 40px; /* Ensure number stays aligned */
+    text-align: center;
+}
+
+#springback-container {
+    position: absolute;
+    bottom: 320px; /* Positioned above all sliders */
+    left: 20px; /* Align with sliders */
+    font-family: Arial, sans-serif;
+    font-size: 16px;
+    font-weight: bold;
+    color: black;
+    background: white;
+    padding: 10px;
+    border-radius: 5px;
+}

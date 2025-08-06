@@ -1,0 +1,599 @@
+<!DOCTYPE html> <!-- It ensures that the browser renders the page in standards mode rather than quirks mode -->
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"> <!-- Without this, some special characters (like “ü”, “ç”, or “ش”) might not display correctly. -->
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>3D Coordinate Frame with Semi-Transparent Lines</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/three@0.128/examples/js/controls/OrbitControls.js"></script>
+        <script src="predictions.js"></script> <!-- MODIFIED -->
+        <link rel="stylesheet" href="styles.css">
+    </head>
+    <body>
+        <h1>3D Visualisation of The Bent Tube</h1>
+        <div id="visualization" style="width: 100%; height: 500px; margin-top: 20px;"></div>
+        <!-- Scene Control Buttons -->
+        <div id="controls">
+            <div id="grid-buttons">
+                <button id="toggleGrid">Show/Hide Grid</button>
+                <div id="stacked-buttons">
+                    <button id="increaseGrid">+</button>
+                    <button id="decreaseGrid">−</button>
+                </div>
+            </div>
+            <div id="line-toggle">
+                <button id="toggleLines">Show/Hide Scan Lines</button>
+            </div>
+            <div id="circle-toggle">
+                <button id="toggleCircle">Show/Hide Bending Radius</button>
+            </div>
+            <div id="coordinate-toggle">
+                <button id="toggleMainAxes">Show/Hide Main Axes</button>
+                <button id="toggleSecondaryAxes">Show/Hide Secondary Axes</button>
+            </div>
+        </div>
+        <!-- Simulation Parameter Fields -->
+        <!-- Tube Diameter -->
+        <div id="tube-diameter">
+            <div id="tube-diameter-label">Tube Diameter [mm]</div>
+            <div id="tube-diameter-wrapper">
+                <input type="range" id="number-tube-diameter" min="21.7" max="22.3" step="0.3" value="21.7">
+                <span id="tube-diameter-value">21.70</span>
+            </div>
+        </div>
+        <!-- Wall Thickness -->
+        <div id="wall-thickness">
+            <div id="wall-thickness-label">Wall Thickness [mm]</div>
+            <div id="wall-thickness-wrapper">
+                <input type="range" id="number-wall-thickness" min="0.8" max="1.2" step="0.2" value="0.8">
+                <span id="wall-thickness-value">0.80</span>
+            </div>
+        </div>
+        <!-- Mandrel Extraction -->
+        <div id="mandrel-extraction">
+            <div id="mandrel-extraction-label">Mandrel Extraction [Degree]</div>
+            <div id="mandrel-extraction-wrapper">
+                <input type="range" id="number-mandrel-extraction" min="0" max="10" step="5" value="0">
+                <span id="mandrel-extraction-value">0.00</span>
+            </div>
+        </div>
+        <!-- Collet Boost -->
+        <div id="collet-boost">
+            <div id="collet-boost-label">Collet Boost [-]</div>
+            <div id="collet-boost-wrapper">
+                <input type="range" id="number-collet-boost" min="0.85" max="0.95" step="0.05" value="0.95">
+                <span id="collet-boost-value">0.95</span>
+            </div>
+        </div>
+        <!-- Pressure Die Clearance -->
+        <div id="pressure-die-clearance">
+            <div id="pressure-die-clearance-label">Pressure Die Clearance [mm]</div>
+            <div id="pressure-die-clearance-wrapper">
+                <input type="range" id="number-pressure-die-clearance" min="-0.2" max="0" step="0.1" value="0">
+                <span id="pressure-die-clearance-value">0</span>
+            </div>
+        </div>
+        <!-- Springback Display -->
+        <div id="springback-container">
+            <span id="springback-text">Springback: 0.85</span>
+        </div>
+
+        <script>
+            // ##############################
+            // 🧩 Variable Definition Section
+            // ##############################
+            // 0️⃣ 1️⃣ 2️⃣ 3️⃣ 4️⃣ 5️⃣ 6️⃣ 7️⃣ 8️⃣ 9️⃣
+            let bendingradius = 3;
+            // 1️⃣ Tube Diameter Slider
+            const tubeDiameterSlider = document.getElementById("number-tube-diameter");
+            const tubeDiameterValue = document.getElementById("tube-diameter-value");
+            // 2️⃣ Wall Thickness Slider
+            const wallThicknessSlider = document.getElementById("number-wall-thickness");
+            const wallThicknessValue = document.getElementById("wall-thickness-value");
+            // 3️⃣ Mandrel Extraction Slider
+            const mandrelExtractionSlider = document.getElementById("number-mandrel-extraction");
+            const mandrelExtractionValue = document.getElementById("mandrel-extraction-value");
+            // 4️⃣ Collet Boost Slider
+            const colletBoostSlider = document.getElementById("number-collet-boost");
+            const colletBoostValue = document.getElementById("collet-boost-value");
+            // 5️⃣ Pressure Die Clearance Slider
+            const pressureDieClearanceSlider = document.getElementById("number-pressure-die-clearance");
+            const pressureDieClearanceValue = document.getElementById("pressure-die-clearance-value");
+            // 6️⃣ Circles along the x-axis variables 
+            const numCircles = 150; // Total number of circles
+            const spacing = 0.04; // Distance between circles along the x-axis
+            const startPosition = bendingradius; // Starting position of the first circle (x-coordinate)
+            const circleMaterial = new THREE.LineBasicMaterial({ color: 0xffffff }); // White circles
+            let circles = []; // Array to store circles            
+            // 7️⃣ Springback and its related variables
+            let Springback = 0; // let → Declares a variable that can be reassigned later.
+            let debounceTimer; // To set debouncing time for displaying Springback number
+            // 8️⃣ Variables for Scanning Lines
+            let rotationAngle = -Springback;
+            let semiTransparentLines = []; // Global array to store lines
+            let areLinesVisible = true; // Track visibility state
+            // Other Variables
+            // 🎯 Global variables for secondary coordinate system
+            let originX, originY, originZ;
+
+            let bendCircles = []; // Global array to store bend circles
+            // ✅ Variables to store the last circle's position
+            let lastCircleX = 0;
+            let lastCircleZ = 0;
+            let CircleCount = 0;
+            let rotatedAxis = null;
+            let rotatedCircles = [];
+            let axisLength = 20 - bendingradius;
+
+            // ####################
+            // 🛠️ Functions Section 
+            // ####################
+            // 1️⃣ Create/update circles along the x-axis
+            function createCircles(radius) {
+                // Remove old circles
+                circles.forEach(circle => scene.remove(circle));
+                circles = []; // Reset array
+
+                for (let i = 0; i < numCircles; i++) {
+                    const x = startPosition + i * spacing; // X position for each circle
+                    const circleGeometry = new THREE.BufferGeometry();
+                    const circleVertices = [];
+
+                    for (let theta = 0; theta <= Math.PI * 2; theta += Math.PI / 50) {
+                        const y = radius * Math.sin(theta);
+                        const z = radius * Math.cos(theta);
+                        circleVertices.push(new THREE.Vector3(x, y, z));
+                    }
+
+                    circleGeometry.setFromPoints(circleVertices);
+                    const circle = new THREE.Line(circleGeometry, circleMaterial);
+                    scene.add(circle);
+                    circles.push(circle); // Store for future updates
+                }
+
+                // Force scene to update
+                renderer.render(scene, camera);
+            }
+
+            // 2️⃣ Update Springback Display
+            function updateSpringbackDisplay() {
+                // ✅ Clear previous timer if the user keeps moving the slider
+                clearTimeout(debounceTimer);
+
+                // ✅ Set a new timer to wait 300ms before sending a request
+                debounceTimer = setTimeout(() => {
+                    document.getElementById("springback-text").textContent = "Calculating...";
+
+                    const key = `${parseFloat(tubeDiameterSlider.value).toFixed(1)}_${parseFloat(wallThicknessSlider.value).toFixed(1)}_${parseFloat(mandrelExtractionSlider.value).toFixed(0)}_${parseFloat(colletBoostSlider.value).toFixed(2)}_${parseFloat(pressureDieClearanceSlider.value).toFixed(1)}`;
+
+                    if (predictionData[key]) {
+                        Springback = predictionData[key].springback;
+                        document.getElementById("springback-text").textContent = `Springback: ${Springback.toFixed(2)}`;
+                        updateLines();
+                        updateBendCircles();
+                    } else {
+                        document.getElementById("springback-text").textContent = "❌ No prediction found for selected inputs";
+                        console.warn("❌ No data for key:", key);
+                    }
+                }, 300); // ✅ Wait 300ms before making the request
+            }
+
+            // 3️⃣ Draw Scanning Lines
+            function updateLines() {
+                // ✅ Clear old lines from the scene
+                semiTransparentLines.forEach(line => scene.remove(line));
+                semiTransparentLines = []; // Reset array
+
+                // ✅ Use updated Springback to determine rotationAngle
+                const rotationAngle = -Springback;
+
+                // ✅ Recalculate the number of lines
+                const numLines = 90 - Math.floor(Math.abs(rotationAngle));
+                const lineLength = 5;
+                const lineMaterial = new THREE.LineBasicMaterial({ 
+                    color: 0x00ff00, 
+                    transparent: true, 
+                    opacity: 0.5 
+                });
+
+                for (let i = 0; i < numLines; i++) {
+                    const angle = -(i * Math.PI) / 180;
+                    const lineGeometry = new THREE.BufferGeometry();
+
+                    const startPoint = new THREE.Vector3(
+                        originX + lineLength * Math.sin(angle), 
+                        originY,
+                        originZ - lineLength * Math.cos(angle)
+                    );
+                    const endPoint = new THREE.Vector3(
+                        originX - lineLength * Math.sin(angle), 
+                        originY,
+                        originZ + lineLength * Math.cos(angle)
+                    );
+
+                    lineGeometry.setFromPoints([startPoint, endPoint]);
+                    const line = new THREE.Line(lineGeometry, lineMaterial);
+                    
+                    // ✅ Ensure new lines inherit the previous visibility state
+                    line.visible = areLinesVisible;
+
+                    scene.add(line);
+                    semiTransparentLines.push(line);
+                }
+            }
+
+            // 4️⃣ Drawing the Circles in the bend
+            function updateBendCircles() {
+                // ✅ Remove old bend circles before drawing new ones
+                bendCircles.forEach(circle => scene.remove(circle));
+                bendCircles = [];
+
+                // ✅ Define the rotation angle in radians
+                const rotationAngleRad = THREE.MathUtils.degToRad(Math.abs(rotationAngle));
+
+
+                // ✅ Fetch predicted diameters from the backend
+                // ✅ Fetch predicted diameters from the backend
+                const key = `${parseFloat(tubeDiameterSlider.value).toFixed(1)}_${parseFloat(wallThicknessSlider.value).toFixed(1)}_${parseFloat(mandrelExtractionSlider.value).toFixed(0)}_${parseFloat(colletBoostSlider.value).toFixed(2)}_${parseFloat(pressureDieClearanceSlider.value).toFixed(1)}`;
+
+                if (!predictionData[key]) {
+                    console.warn("❌ No prediction data for key:", key);
+                    return;
+                }
+
+                const data = predictionData[key];
+
+                for (let LoopVariable = Math.ceil(Springback); LoopVariable <= 90; LoopVariable++) {
+                    const prediction = data.predictions.find(p => p.index === LoopVariable);
+                        if (!prediction) {
+                            console.warn(`No prediction found for LoopVariable: ${LoopVariable}`);
+                            continue; // Skip if no prediction is found
+                        }
+
+                        // ✅ Use predicted values instead of fixed 2.17, divided by 10
+                        const diameterXZ = prediction.diameterXZ / 9.7; // Secondary Axis
+                        const diameterXY = prediction.diameterXY / 9.7; // Main Axis
+
+                        Xposition = secondaryAxes.position.x - nonTransparentCircleRadius * Math.cos(LoopVariable * Math.PI / 180);
+                        Zposition = secondaryAxes.position.x - nonTransparentCircleRadius * Math.sin(LoopVariable * Math.PI / 180);
+                        rotationx = 0 * Math.PI / 180;
+                        rotationy = (90 - LoopVariable) * Math.PI / 180;
+                        rotationz = 90 * Math.PI / 180;
+                        const circleRadiuss = 0.5; // Radius of the circle
+                        const circlePosition = [Xposition, 0, Zposition]; // [x, y, z] position
+                        const circleRotation = [rotationx, rotationy, rotationz]; // [rotationX, rotationY, rotationZ]
+
+                        // ✅ Store the position of the first circle during the first iteration
+                        if (lastCircleX === 0 && lastCircleZ === 0) {
+                            lastCircleX = Xposition;
+                            lastCircleZ = Zposition;
+                            CircleCount = LoopVariable;
+                        }
+
+                        // ✅ Create the circle
+                        const circleMateriall = new THREE.LineBasicMaterial({ color: 0xffff00 }); // Yellow color
+                        const circleGeometry = new THREE.BufferGeometry();
+                        const circleVertices = [];
+
+                        // ✅ Create vertices for the circle
+                        for (let theta = 0; theta <= Math.PI * 2; theta += Math.PI / 50) {
+                            const x = (diameterXZ / 2) * Math.cos(theta);
+                            const z = (diameterXY / 2) * Math.sin(theta);
+                            circleVertices.push(new THREE.Vector3(x, 0, z));
+                        }
+                        circleGeometry.setFromPoints(circleVertices);
+
+                        // ✅ Create the circle mesh
+                        const circle = new THREE.Line(circleGeometry, circleMateriall);
+
+                        // ✅ Apply position and rotation
+                        circle.position.set(...circlePosition);
+                        circle.rotation.set(...circleRotation);
+
+                        // ✅ Add the circle to the scene
+                        scene.add(circle);
+                        bendCircles.push(circle); // ✅ Store the circle for future updates
+                    }
+                updateRotatedAxisAndCircles();
+            }
+
+            //
+            function updateRotatedAxisAndCircles() {
+                // ✅ Remove old rotated axis and circles before drawing new ones
+                if (rotatedAxis) scene.remove(rotatedAxis);
+                rotatedCircles.forEach(circle => scene.remove(circle));
+                rotatedCircles = [];
+
+                // ✅ Define the rotation angle based on Springback
+                const rotationAngle = -Springback; // Rotation should be negative of Springback
+
+                // ✅ Ensure lastCircleX and lastCircleZ are set before drawing
+                if (lastCircleX === 0 && lastCircleZ === 0) {
+                    console.warn("❌ Skipping rotated axis update: lastCircleX and lastCircleZ are not set.");
+                    return;
+                }
+
+                // ✅ Create the rotated axis
+                const rotatedAxisMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 }); // Red color
+                const rotatedAxisGeometry = new THREE.BufferGeometry();
+                const rotatedX = axisLength * Math.sin(THREE.MathUtils.degToRad(rotationAngle));
+                const rotatedZ = axisLength * Math.cos(THREE.MathUtils.degToRad(rotationAngle));
+                
+                rotatedAxisGeometry.setFromPoints([
+                    new THREE.Vector3(lastCircleX, 0, lastCircleZ),
+                    new THREE.Vector3(lastCircleX + rotatedX, 0, lastCircleZ + rotatedZ)
+                ]);
+
+                rotatedAxis = new THREE.Line(rotatedAxisGeometry, rotatedAxisMaterial);
+                scene.add(rotatedAxis);
+
+                // ✅ Add circles along the rotated red line
+                const numCirclesRotated = 300 + CircleCount; // Total number of circles
+                const spacingRotated = 0.04; // Distance between circles
+                const startOffsetRotated = 0; // Offset from the first circle
+
+                const rotatedLineStart = new THREE.Vector3(lastCircleX, 0, lastCircleZ);
+                const rotatedLineDirection = new THREE.Vector3(rotatedX, 0, rotatedZ).normalize();
+                const circleMaterialRotated = new THREE.LineBasicMaterial({ color: 0xffffff });
+
+                for (let i = 0; i < numCirclesRotated; i++) {
+                    const distance = startOffsetRotated + i * spacingRotated;
+                    const position = rotatedLineStart.clone().add(rotatedLineDirection.clone().multiplyScalar(distance));
+                    const circleRadiusRotated = parseFloat(tubeDiameterSlider.value) / 20;
+                    const circleGeometryRotated = new THREE.BufferGeometry();
+                    const circleVerticesRotated = [];
+
+                    for (let theta = 0; theta <= Math.PI * 2; theta += Math.PI / 50) {
+                        const x = circleRadiusRotated * Math.cos(theta);
+                        const y = circleRadiusRotated * Math.sin(theta);
+                        const z = 0;
+                        const rotatedVertex = new THREE.Vector3(x, y, z)
+                            .applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), rotatedLineDirection));
+                        circleVerticesRotated.push(position.clone().add(rotatedVertex));
+                    }
+
+                    circleGeometryRotated.setFromPoints(circleVerticesRotated);
+                    const circleRotated = new THREE.Line(circleGeometryRotated, circleMaterialRotated);
+                    scene.add(circleRotated);
+                    rotatedCircles.push(circleRotated);
+                }
+            }
+
+            // ####################
+            // 🚀 EXECUTION SECTION
+            // ####################
+
+            // 1️⃣ Initialize the scene
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('visualization').appendChild(renderer.domElement);
+            // Add window resize listener to dynamically adjust scene size
+            window.addEventListener('resize', () => {
+                const width = window.innerWidth;
+                const height = window.innerHeight;
+
+                renderer.setSize(width, height);
+                camera.aspect = width / height;
+                camera.updateProjectionMatrix();
+            });
+
+            // 2️⃣ Initialize OrbitControls
+            // This section of code initializes OrbitControls in Three.js, which allows the user to interact with the 3D scene using the mouse.
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.1;
+            controls.rotateSpeed = 0.7;
+
+            // 3️⃣ Slider Controls
+            // ##### SELECT TUBE DIAMETER SLIDER ELEMENTS #####
+            tubeDiameterSlider.addEventListener("input", function () {
+                tubeDiameter = parseFloat(this.value); // Get updated tube diameter
+                tubeDiameterValue.textContent = tubeDiameter.toFixed(2); // Update displayed value
+
+                // Call the circle update function
+                createCircles(tubeDiameter / 20);
+                updateSpringbackDisplay();
+            });
+            // ##### SELECT WALL THICKNESS SLIDER ELEMENTS #####
+            // Update displayed value when slider changes
+            wallThicknessSlider.addEventListener("input", function () {
+                wallThicknessValue.textContent = parseFloat(this.value).toFixed(2); // Show value with 2 decimal places
+                updateSpringbackDisplay();
+            });
+            // Access this value elsewhere in your code when needed:
+            let wallThickness = parseFloat(wallThicknessSlider.value); // Get initial value
+            wallThicknessSlider.addEventListener("input", function () {
+                wallThickness = parseFloat(this.value);
+                console.log("Wall Thickness:", wallThickness); // Use this value in your logic
+            });
+            // ##### SELECT MANDREL EXTRACTION SLIDER ELEMENTS #####
+            // Update displayed value when slider changes
+            mandrelExtractionSlider.addEventListener("input", function () {
+                mandrelExtractionValue.textContent = parseFloat(this.value).toFixed(2); // Show value with 2 decimal places
+                updateSpringbackDisplay();
+            });
+            // Access this value elsewhere in your code when needed:
+            let mandrelExtraction = parseFloat(mandrelExtractionSlider.value); // Get initial value
+            mandrelExtractionSlider.addEventListener("input", function () {
+                mandrelExtraction = parseFloat(this.value);
+                console.log("Mandrel Extraction:", mandrelExtraction); // Use this value in your logic
+            });
+            // ##### SELECT COLLET BOOST SLIDER ELEMENTS #####
+            // Update displayed value when slider changes
+            colletBoostSlider.addEventListener("input", function () {
+                colletBoostValue.textContent = parseFloat(this.value).toFixed(2); // Show value with 2 decimal places
+                updateSpringbackDisplay();
+            });
+            // Access this value elsewhere in your code when needed:
+            let colletBoost = parseFloat(colletBoostSlider.value); // Get initial value
+            colletBoostSlider.addEventListener("input", function () {
+                colletBoost = parseFloat(this.value);
+                console.log("Collet Boost:", colletBoost); // Use this value in your logic
+            });
+            // ##### SELECT PRESSURE DUE CLEARANCE SLIDER ELEMENTS #####
+            // Update displayed value when slider changes
+            pressureDieClearanceSlider.addEventListener("input", function () {
+                pressureDieClearanceValue.textContent = parseFloat(this.value).toFixed(2); // Show value with 2 decimal places
+                updateSpringbackDisplay();
+            });
+            // Access this value elsewhere in your code when needed:
+            let pressureDieClearance = parseFloat(pressureDieClearanceSlider.value); // Get initial value
+            pressureDieClearanceSlider.addEventListener("input", function () {
+                pressureDieClearance = parseFloat(this.value);
+                console.log("Pressure Die Clearance:", pressureDieClearance); // Use this value in your logic
+            });
+            // ##### SPRINGBACK SECTION #####
+            updateSpringbackDisplay();
+
+            // 4️⃣ Coordinate System and Grid
+            // Main coordinate system
+            const axesHelper = new THREE.AxesHelper(20); // Axes size of 40 units
+            scene.add(axesHelper);
+            document.getElementById('toggleMainAxes').addEventListener('click', () => {
+                axesHelper.visible = !axesHelper.visible; // Toggle visibility
+            });
+            // Secondary coordinate system
+            const secondaryAxes = new THREE.AxesHelper(20 - bendingradius); // Axes size of the secondary system
+            secondaryAxes.position.set(bendingradius, 0, bendingradius); // Offset relative to the main coordinate system
+            scene.add(secondaryAxes);
+            // ✅ Update global variables
+            originX = secondaryAxes.position.x;
+            originY = secondaryAxes.position.y;
+            originZ = secondaryAxes.position.z;
+            document.getElementById('toggleSecondaryAxes').addEventListener('click', () => {
+                secondaryAxes.visible = !secondaryAxes.visible; // Toggle visibility
+            });
+            // Custom Grid
+            let gridSize = 35;
+            let gridDivisions = 80;
+            let gridHelper = new THREE.GridHelper(gridSize, gridDivisions);
+            scene.add(gridHelper);
+            // Button Actions
+            document.getElementById('toggleGrid').addEventListener('click', () => {
+                gridHelper.visible = !gridHelper.visible; // Toggle visibility
+            });
+            document.getElementById('increaseGrid').addEventListener('click', () => {
+                scene.remove(gridHelper); // Remove the current grid
+                gridDivisions += 10; // Increase divisions
+                gridHelper = new THREE.GridHelper(gridSize, gridDivisions);
+                scene.add(gridHelper);
+            });
+            document.getElementById('decreaseGrid').addEventListener('click', () => {
+                if (gridSize > 10 && gridDivisions > 10) { // Prevent negative sizes
+                    scene.remove(gridHelper); // Remove the current grid
+                    gridDivisions -= 10; // Decrease divisions
+                    gridHelper = new THREE.GridHelper(gridSize, gridDivisions);
+                    scene.add(gridHelper);
+                }
+            });
+
+            // 5️⃣ Initialize circles along the x axis once when the scene loads
+            let tubeDiameter = parseFloat(tubeDiameterSlider.value);
+            createCircles(tubeDiameter / 20); // Initial call to create circles
+
+            // 6️⃣ Initialize the scanning lines once when the scene loads
+            updateLines();
+            document.getElementById('toggleLines').addEventListener('click', () => {
+                areLinesVisible = !areLinesVisible; // Toggle visibility state
+                semiTransparentLines.forEach(line => {
+                    line.visible = areLinesVisible; // Apply visibility state
+                });
+            });
+
+            // 7️⃣ Add a non-transparent circle at the secondary coordinate system origin
+            const nonTransparentCircleRadius = bendingradius; // Radius of the circle
+            const nonTransparentCircleMaterial = new THREE.LineBasicMaterial({ color: 0xff0000 }); // Red color
+            const nonTransparentCircleGeometry = new THREE.BufferGeometry();
+            const nonTransparentCircleVertices = [];
+            document.getElementById('toggleCircle').addEventListener('click', () => {
+                nonTransparentCircle.visible = !nonTransparentCircle.visible; // Toggle visibility
+            });
+            // Create the circle's vertices
+            for (let theta = 0; theta <= Math.PI * 2; theta += Math.PI / 50) {
+                const x = originX + nonTransparentCircleRadius * Math.cos(theta);
+                const z = originZ + nonTransparentCircleRadius * Math.sin(theta);
+                nonTransparentCircleVertices.push(new THREE.Vector3(x, originY, z)); // Y=0 at the secondary coordinate system
+            }
+            nonTransparentCircleGeometry.setFromPoints(nonTransparentCircleVertices);
+            // Create the circle and add it to the scene
+            const nonTransparentCircle = new THREE.Line(nonTransparentCircleGeometry, nonTransparentCircleMaterial);
+            scene.add(nonTransparentCircle);
+
+
+
+
+
+            window.addEventListener("load", () => {
+                console.log("🔄 Initializing Scene...");
+
+                // 🎲 Assign random values to sliders at startup
+                function getRandomValue(options) {
+                    return options[Math.floor(Math.random() * options.length)];
+                }
+
+                const tubeDiameterOptions = [21.7, 22.0, 22.3];
+                const wallThicknessOptions = [0.8, 1.0, 1.2];
+                const mandrelExtractionOptions = [0, 5, 10];
+                const colletBoostOptions = [0.85, 0.90, 0.95];
+                const pressureDieClearanceOptions = [-0.2, -0.1, 0];
+
+                // Set random values
+                tubeDiameterSlider.value = getRandomValue(tubeDiameterOptions);
+                wallThicknessSlider.value = getRandomValue(wallThicknessOptions);
+                mandrelExtractionSlider.value = getRandomValue(mandrelExtractionOptions);
+                colletBoostSlider.value = getRandomValue(colletBoostOptions);
+                pressureDieClearanceSlider.value = getRandomValue(pressureDieClearanceOptions);
+
+                // Trigger input events so UI updates correctly
+                tubeDiameterSlider.dispatchEvent(new Event("input"));
+                wallThicknessSlider.dispatchEvent(new Event("input"));
+                mandrelExtractionSlider.dispatchEvent(new Event("input"));
+                colletBoostSlider.dispatchEvent(new Event("input"));
+                pressureDieClearanceSlider.dispatchEvent(new Event("input"));
+
+
+
+                updateBendCircles(); // ✅ Ensure lastCircleX and lastCircleZ are updated
+
+                // ✅ Use a dynamic check instead of a fixed delay
+                const checkInterval = setInterval(() => {
+                    if (lastCircleX !== 0 || lastCircleZ !== 0) { // ✅ Wait until values are updated
+                        console.log("✅ lastCircleX and lastCircleZ are set. Running updateRotatedAxisAndCircles()...");
+                        updateRotatedAxisAndCircles();
+                        clearInterval(checkInterval); // ✅ Stop checking once values are set
+                    } else {
+                        console.log("⏳ Waiting for lastCircleX and lastCircleZ to be set...");
+                    }
+                }, 50); // ✅ Check every 100ms
+            });
+
+
+
+
+
+            
+            // Add a point light
+            const pointLight = new THREE.PointLight(0xffffff, 1);
+            pointLight.position.set(5, 5, 5);
+            scene.add(pointLight);
+
+            // Add an ambient light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft light
+            scene.add(ambientLight);
+
+            // Position the camera
+            camera.position.set(10, 5, 10);
+            camera.lookAt(0, 0, 0);
+
+            // Render the scene
+            const animate = function () {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            };
+            animate();
+        </script>
+    </body>
+</html>
