@@ -489,5 +489,5 @@
 
 .slider-bar {
     position: relative;
-    z-index: 3; /* higher than the tick marks */
+    z-index: 3; 
 }
