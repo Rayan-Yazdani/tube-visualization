@@ -36,8 +36,16 @@
         <!-- Tube Diameter -->
         <div id="tube-diameter">
             <div id="tube-diameter-label">Rohrdurchmesser [mm]</div>
-            <div id="tube-diameter-wrapper">
-                <input type="range" id="number-tube-diameter" min="21.7" max="22.3" step="0.3" value="21.7">
+            <div id="tube-diameter-wrapper" class="slider-container">
+                
+                <!-- Tick marks above the slider -->
+                <div class="slider-tick-track">
+                    <span class="slider-tick"></span>
+                    <span class="slider-tick"></span>
+                    <span class="slider-tick"></span>
+                </div>
+        
+                <input type="range" class="slider-bar" id="number-tube-diameter" min="21.7" max="22.3" step="0.3" value="21.7">
                 <span id="tube-diameter-value">21.70</span>
             </div>
         </div>
