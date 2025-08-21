@@ -635,6 +635,17 @@
                 renderer.render(scene, camera);
             };
             animate();
+
+            // Store original camera position and target
+            const initialCameraPosition = camera.position.clone();
+            const initialCameraTarget = controls.target.clone();
+            
+            document.getElementById('resetScene').addEventListener('click', () => {
+                // Reset camera position and controls target
+                camera.position.copy(initialCameraPosition);
+                controls.target.copy(initialCameraTarget);
+                controls.update();
+            });
         </script>
     </body>
 </html>
